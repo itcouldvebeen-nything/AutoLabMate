@@ -195,17 +195,6 @@ This project addresses all assignment requirements:
 
 ---
 
-## 🎬 Demo Assets
-
-- **Video Script**: [demo/video_script.md](demo/video_script.md)
-- **Screenshots**: [demo/screenshots/](demo/screenshots/)
-  - Upload UI
-  - Plan Editor
-  - Execution Logs
-  - Report Preview
-
----
-
 ## 📝 LLM Interaction Logs
 
 See [docs/INTERACTION_LOGS.md](docs/INTERACTION_LOGS.md) for detailed logs of LLM prompts and responses used during development, including:
@@ -251,11 +240,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ---
 
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE)
-
----
 
 ## 🗓️ Future Work
 

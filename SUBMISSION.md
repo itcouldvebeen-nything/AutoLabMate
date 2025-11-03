@@ -1,6 +1,6 @@
 # AutoLabMate: Project Submission Summary
 
-**Student:** Ishaan Vikas  
+**Student:** Ishaan Chhaparwal 
 **University:** IIT Roorkee  
 **Department:** Department of Metallurgical and Materials Engineering  
 
@@ -117,7 +117,7 @@ Download: PDF + Notebook
 ### Project Repository
 
 **GitHub:** https://github.com/itcouldvebeen-nything/AutoLabMate  
-**Demo Video:**    
+**Demo Video:**   https://youtu.be/Z4PrjSnfkDs 
 
 ---
 

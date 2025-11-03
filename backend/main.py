@@ -175,7 +175,7 @@ async def upload_dataset(
     """
     try:
         # Create uploads directory if it doesn't exist
-        upload_dir = Path("./uploads")
+        upload_dir = Path("/app/uploads")
         upload_dir.mkdir(exist_ok=True)
         
         # Save uploaded file
@@ -200,7 +200,7 @@ async def upload_dataset(
             experiment_id = experiment.id
         
         return {
-            "dataset_path": str(file_path),
+            "dataset_path": f"/app/uploads/{file.filename}",
             "experiment_id": experiment_id,
             "filename": file.filename,
             "message": "Dataset uploaded successfully"
@@ -223,6 +223,9 @@ async def generate_plan(request: PlanRequest):
         PlanResponse with step-by-step analysis plan
     """
     try:
+        dataset_path = request.dataset_path
+        if not dataset_path.startswith("/app/"):
+            dataset_path = f"/app{dataset_path}"
         logger.info(f"Generating plan for dataset: {request.dataset_path}")
         
         # Generate plan using PlannerAgent

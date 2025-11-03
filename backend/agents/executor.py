@@ -33,7 +33,7 @@ class ExecutorAgent:
         """Initialize Executor Agent"""
         self.work_dir = Path("./workspace")
         self.work_dir.mkdir(exist_ok=True)
-        self.use_sandbox = os.getenv("USE_SANDBOX", "true").lower() == "true"
+        self.use_sandbox = os.getenv("USE_SANDOX", "true").lower() == "true"
     
     async def execute_plan(
         self,
@@ -43,14 +43,6 @@ class ExecutorAgent:
     ) -> Dict[str, Any]:
         """
         Execute a complete analysis plan
-        
-        Args:
-            plan_id: ID of the plan
-            steps: List of step dictionaries
-            modifications: Optional user modifications to steps
-            
-        Returns:
-            Execution result with outputs and status
         """
         try:
             logger.info(f"Executing plan {plan_id} with {len(steps)} steps")
@@ -96,13 +88,6 @@ class ExecutorAgent:
     ) -> nbformat.NotebookNode:
         """
         Create Jupyter notebook from plan steps
-        
-        Args:
-            steps: List of step dictionaries
-            modifications: Optional modifications
-            
-        Returns:
-            Notebook object
         """
         notebook = nbformat.v4.new_notebook()
         
@@ -131,24 +116,19 @@ sns.set_palette("husl")"""
         
         # Add cells for each step
         for step in steps:
-            # Apply modifications if any
             if modifications and step.get("step_number") in modifications.get("steps", {}):
                 step = {**step, **modifications["steps"][step["step_number"]]}
             
-            # Add step header
             header = f"## Step {step.get('step_number')}: {step.get('name')}"
             notebook.cells.append(nbformat.v4.new_markdown_cell(header))
             
-            # Add code cell for step
             code_cell = self._generate_step_code(step)
             notebook.cells.append(nbformat.v4.new_code_cell(code_cell))
         
-        # Add report generation cell
         notebook.cells.append(nbformat.v4.new_markdown_cell("## Report Summary"))
         notebook.cells.append(nbformat.v4.new_code_cell(
             """# Generate summary
-print("Analysis completed successfully!")
-print(f"Total execution time: {execution_time:.2f} seconds")"""
+print("Analysis completed successfully!")"""
         ))
         
         return notebook
@@ -156,12 +136,6 @@ print(f"Total execution time: {execution_time:.2f} seconds")"""
     def _generate_step_code(self, step: Dict) -> str:
         """
         Generate Python code for a step
-        
-        Args:
-            step: Step dictionary
-            
-        Returns:
-            Python code string
         """
         action = step.get("action")
         parameters = step.get("parameters", {})
@@ -171,7 +145,7 @@ print(f"Total execution time: {execution_time:.2f} seconds")"""
 df = pd.read_{parameters.get('file_type', 'csv').replace('.', '')}(
     '{parameters.get('file_path', '')}'
 )
-print(f"Loaded {len(df)} rows, {len(df.columns)} columns")
+print(f"Loaded {{len(df)}} rows, {{len(df.columns)}} columns")
 print(df.head())"""
         
         elif action == "compute_stats":
@@ -186,7 +160,7 @@ print(stats_df)"""
         
         elif action == "create_plot":
             plot_type = parameters.get('plot_type', 'histogram')
-            column = parameters.get('column', df.columns[0] if 'df' in globals() else '')
+            column = parameters.get('column', 'price')
             
             if plot_type == "histogram":
                 return f"""# Create histogram
@@ -196,12 +170,12 @@ plt.title(f'Distribution of {column}')
 plt.xlabel(column)
 plt.ylabel('Frequency')
 plt.grid(True, alpha=0.3)
-plt.savefig(f'plots/{column}_histogram.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plots/{{column}}_histogram.png', dpi=300, bbox_inches='tight')
 plt.show()"""
             
             elif plot_type == "scatter":
-                x_col = parameters.get('x', df.columns[0] if 'df' in globals() else '')
-                y_col = parameters.get('y', df.columns[1] if 'df' in globals() else '')
+                x_col = parameters.get('x', 'area')
+                y_col = parameters.get('y', 'price')
                 return f"""# Create scatter plot
 plt.figure(figsize=(10, 6))
 plt.scatter(df['{x_col}'], df['{y_col}'], alpha=0.6)
@@ -209,17 +183,12 @@ plt.title(f'{y_col} vs {x_col}')
 plt.xlabel(x_col)
 plt.ylabel(y_col)
 plt.grid(True, alpha=0.3)
-plt.savefig(f'plots/{x_col}_{y_col}_scatter.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plots/{{x_col}}_{{y_col}}_scatter.png', dpi=300, bbox_inches='tight')
 plt.show()"""
             
         elif action == "compute_correlations":
-            columns = parameters.get('columns', [])
-            if columns:
-                return f"""# Compute correlation matrix
-corr = df[{columns}].corr()
-print(corr)
-
-# Visualize correlation
+            return """# Compute correlation matrix
+corr = df.corr()
 plt.figure(figsize=(10, 8))
 sns.heatmap(corr, annot=True, cmap='coolwarm', center=0, square=True)
 plt.title('Correlation Matrix')
@@ -231,9 +200,7 @@ plt.show()"""
             return """# Report generation handled by backend
 print("Report generation completed")"""
         
-        # Default fallback
         return f"""# Execute: {step.get('name')}
-# Action: {action}
 print(f"Executing step {step.get('step_number')}")"""
     
     async def _execute_notebook(
@@ -243,42 +210,29 @@ print(f"Executing step {step.get('step_number')}")"""
     ) -> Dict[str, Any]:
         """
         Execute Jupyter notebook
-        
-        Args:
-            notebook_path: Path to notebook
-            exec_dir: Execution directory
-            
-        Returns:
-            Execution results
         """
         start_time = time.time()
-        
         try:
-            # Create output directory for plots
             plots_dir = exec_dir / "plots"
             plots_dir.mkdir(exist_ok=True)
             
-            # Convert notebook to Python script
             exporter = PythonExporter()
             script, _ = exporter.from_file(notebook_path)
             
-            # Write Python script
             script_path = exec_dir / "analysis.py"
             with open(script_path, "w") as f:
                 f.write(script)
             
-            # Execute Python script
             result = subprocess.run(
                 ["python", str(script_path)],
                 cwd=str(exec_dir),
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300
             )
             
             execution_time = time.time() - start_time
             
-            # Collect outputs
             outputs = {
                 "stdout": result.stdout,
                 "stderr": result.stderr,
@@ -314,40 +268,29 @@ print(f"Executing step {step.get('step_number')}")"""
         result: Dict[str, Any]
     ) -> Path:
         """
-        Generate final PDF report
-        
-        Args:
-            exec_dir: Execution directory
-            result: Execution results
-            
-        Returns:
-            Path to generated report
+        Generate final PDF report with fallback
         """
         try:
-            # Generate markdown report
+            # Create markdown report
             md_path = exec_dir / "report.md"
             with open(md_path, "w") as f:
                 f.write("# AutoLabMate Experimental Report\n\n")
                 f.write(f"Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
                 f.write("## Analysis Results\n\n")
                 f.write("Analysis completed successfully.\n\n")
-                
                 if result.get("success"):
                     f.write(f"Execution time: {result['execution_time']:.2f} seconds\n\n")
-                    
-                    # Add summary of outputs if available
                     if result.get("outputs", {}).get("stdout"):
                         f.write("## Execution Log\n\n```\n")
                         f.write(result["outputs"]["stdout"])
                         f.write("\n```\n\n")
-            
-            # Convert to PDF using weasyprint or similar
+
             pdf_path = exec_dir / "report.pdf"
+
             try:
                 from weasyprint import HTML
                 from markdown import markdown
-                
-                # Convert markdown to HTML
+
                 html_content = markdown(md_path.read_text())
                 full_html = f"""
                 <html>
@@ -362,17 +305,44 @@ print(f"Executing step {step.get('step_number')}")"""
                     <body>{html_content}</body>
                 </html>
                 """
-                
                 HTML(string=full_html).write_pdf(pdf_path)
-                
+
+                # If WeasyPrint produced empty PDF, fall back
+                if pdf_path.exists() and pdf_path.stat().st_size < 1024:
+                    raise RuntimeError("WeasyPrint generated empty PDF")
+
             except Exception as e:
-                logger.warning(f"PDF generation failed: {str(e)}, using markdown")
-                pdf_path = md_path
-            
-            logger.info(f"Report generated: {pdf_path}")
+                # --- Fallback to ReportLab ---
+                from reportlab.lib.pagesizes import A4
+                from reportlab.pdfgen import canvas
+                logger.warning(f"WeasyPrint failed ({e}), falling back to ReportLab")
+
+                c = canvas.Canvas(str(pdf_path), pagesize=A4)
+                width, height = A4
+
+                c.setFont("Helvetica-Bold", 18)
+                c.drawString(50, height - 50, "AutoLabMate Experimental Report")
+
+                c.setFont("Helvetica", 12)
+                c.drawString(50, height - 80, f"Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+                y = height - 120
+                for line in md_path.read_text().splitlines():
+                    if not line.strip():
+                        y -= 10
+                        continue
+                    if y < 50:
+                        c.showPage()
+                        y = height - 50
+                    c.drawString(50, y, line.strip()[:110])
+                    y -= 15
+
+                c.showPage()
+                c.save()
+
+            logger.info(f"✅ Report generated: {pdf_path}")
             return pdf_path
-            
+
         except Exception as e:
             logger.error(f"Report generation error: {str(e)}")
             raise
-

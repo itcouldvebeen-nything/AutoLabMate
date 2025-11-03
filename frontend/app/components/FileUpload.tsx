@@ -6,7 +6,7 @@ import { Upload, File, CheckCircle } from 'lucide-react'
 import axios from 'axios'
 
 interface FileUploadProps {
-  onComplete: (experimentId: string) => void
+  onComplete: (experimentId: string,filePath: string) => void
 }
 
 export default function FileUpload({ onComplete }: FileUploadProps) {
@@ -38,7 +38,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
 
       setUploaded(true)
       setExperimentId(response.data.experiment_id)
-      onComplete(response.data.experiment_id)
+      onComplete(response.data.experiment_id,response.data.file_path || response.data.dataset_path)
     } catch (error: any) {
       console.error('Upload error:', error)
       alert(`Upload failed: ${error.response?.data?.detail || error.message}`)

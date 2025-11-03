@@ -12,9 +12,12 @@ export default function Home() {
   const [experimentId, setExperimentId] = useState<string | null>(null)
   const [plan, setPlan] = useState<any>(null)
   const [executionId, setExecutionId] = useState<string | null>(null)
+  const [datasetPath, setDatasetPath] = useState<string | null>(null)
 
-  const handleUploadComplete = (expId: string) => {
+
+  const handleUploadComplete = (expId: string, filePath: string) => {
     setExperimentId(expId)
+    setDatasetPath(filePath)
     setCurrentStep('plan')
   }
 
@@ -112,7 +115,11 @@ export default function Home() {
           {currentStep === 'plan' && experimentId && (
             <div>
               <h2 className="text-2xl font-bold mb-6">Analysis Plan</h2>
-              <PlanEditor experimentId={experimentId} onReady={handlePlanReady} />
+              <PlanEditor
+                experimentId={experimentId}
+                datasetPath={datasetPath!}
+                onReady={handlePlanReady}
+              />
             </div>
           )}
 

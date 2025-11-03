@@ -6,10 +6,11 @@ import axios from 'axios'
 
 interface PlanEditorProps {
   experimentId: string
+  datasetPath: string
   onReady: (plan: any) => void
 }
 
-export default function PlanEditor({ experimentId, onReady }: PlanEditorProps) {
+export default function PlanEditor({ experimentId,datasetPath, onReady }: PlanEditorProps) {
   const [loading, setLoading] = useState(true)
   const [plan, setPlan] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +28,7 @@ export default function PlanEditor({ experimentId, onReady }: PlanEditorProps) {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/plan`,
         {
-          dataset_path: `/uploads/sample_data_${experimentId}.csv`,
+          dataset_path: datasetPath,
           experiment_description: 'Automated analysis of experimental data'
         }
       )
