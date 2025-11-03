@@ -31,7 +31,6 @@ autolabmate/
 │   └── template_analysis.ipynb
 ├── docs/              # Documentation
 │   ├── SYSTEM_DESIGN.md
-│   ├── INTERACTION_LOGS.md
 │   └── DEPLOY.md
 ├── demo/              # Demo assets
 │   └── video_script.md
@@ -39,9 +38,8 @@ autolabmate/
 ├── .github/workflows/  # CI/CD
 │   └── ci.yml
 ├── README.md          # Main documentation
-├── LICENSE            # MIT License
 ├── CONTRIBUTING.md    # Dev guide
-└── CODE_OF_CONDUCT.md # Community rules
+
 ```
 
 ---

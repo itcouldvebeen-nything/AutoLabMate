@@ -102,6 +102,9 @@ class PlannerAgent:
             Dictionary with dataset metadata
         """
         try:
+            if dataset_path.startswith("/uploads/"):
+                dataset_path = f"/app{dataset_path}"
+
             path = Path(dataset_path)
             
             # Ensure correct path inside Docker container
